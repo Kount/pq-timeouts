@@ -13,7 +13,7 @@ import (
 )
 
 func init() {
-	sql.Register("pqTimeouts", &timeoutDriver{})
+	sql.Register("pqTimeouts", timeoutDriver{})
 }
 
 type timeoutDriver struct {
@@ -21,9 +21,12 @@ type timeoutDriver struct {
 	writeTimeout time.Duration
 }
 
-func (t *timeoutDriver) Open(connection string) (driver.Conn, error) {
+func (t timeoutDriver) Open(connection string) (driver.Conn, error) {
 	// Look for read_timeout and write_timeout in the connection string and extract the values.
+	// read_timeout and write_timeout need to be removed from the connection string before calling pq as well.
 	var newConnectionSettings []string
+	var readTimeout time.Duration
+	var writeTimeout time.Duration
 
 	for _, setting := range strings.Fields(connection) {
 		s := strings.Split(setting, "=")
@@ -32,13 +35,13 @@ func (t *timeoutDriver) Open(connection string) (driver.Conn, error) {
 			if err != nil {
 				return nil, fmt.Errorf("Error interpreting value for read_timeout")
 			}
-			t.readTimeout = time.Duration(val) * time.Millisecond // timeout is in milliseconds
+			readTimeout = time.Duration(val) * time.Millisecond // timeout is in milliseconds
 		} else if s[0] == "write_timeout" {
 			val, err := strconv.Atoi(s[1])
 			if err != nil {
 				return nil, fmt.Errorf("Error interpreting value for write_timeout")
 			}
-			t.writeTimeout = time.Duration(val) * time.Millisecond // timeout is in milliseconds
+			writeTimeout = time.Duration(val) * time.Millisecond // timeout is in milliseconds
 		} else {
 			newConnectionSettings = append(newConnectionSettings, setting)
 		}
@@ -46,10 +49,10 @@ func (t *timeoutDriver) Open(connection string) (driver.Conn, error) {
 
 	newConnectionStr := strings.Join(newConnectionSettings, " ")
 
-	return pq.DialOpen(&timeoutDriver{}, newConnectionStr)
+	return pq.DialOpen(timeoutDriver{readTimeout: readTimeout, writeTimeout: writeTimeout}, newConnectionStr)
 }
 
-func (t *timeoutDriver) Dial(network string, address string) (net.Conn, error) {
+func (t timeoutDriver) Dial(network string, address string) (net.Conn, error) {
 	// If we don't have any timeouts set, just return a normal connection
 	if t.readTimeout == 0 && t.writeTimeout == 0 {
 		return net.Dial(network, address)
@@ -64,7 +67,7 @@ func (t *timeoutDriver) Dial(network string, address string) (net.Conn, error) {
 	return &timeoutConn{conn: c, readTimeout: t.readTimeout, writeTimeout: t.writeTimeout}, nil
 }
 
-func (t *timeoutDriver) DialTimeout(network string, address string, timeout time.Duration) (net.Conn, error) {
+func (t timeoutDriver) DialTimeout(network string, address string, timeout time.Duration) (net.Conn, error) {
 	// If we don't have any timeouts set, just return a normal connection
 	if t.readTimeout == 0 && t.writeTimeout == 0 {
 		return net.DialTimeout(network, address, timeout)
@@ -77,88 +80,4 @@ func (t *timeoutDriver) DialTimeout(network string, address string, timeout time
 	}
 
 	return &timeoutConn{conn: c, readTimeout: t.readTimeout, writeTimeout: t.writeTimeout}, nil
-}
-
-type timeoutConn struct {
-	conn         net.Conn
-	readTimeout  time.Duration
-	writeTimeout time.Duration
-}
-
-func (t *timeoutConn) Read(b []byte) (n int, err error) {
-	if t.conn != nil {
-		if t.readTimeout != 0 {
-			// Set a read deadline before we call read.
-			t.conn.SetReadDeadline(time.Now().Add(t.readTimeout))
-		}
-		n, err = t.conn.Read(b)
-		if t.readTimeout != 0 {
-			// Clear the deadline if we have one set
-			t.conn.SetReadDeadline(time.Time{})
-		}
-		return
-	}
-	return 0, fmt.Errorf("Connection is nil")
-}
-
-func (t *timeoutConn) Write(b []byte) (n int, err error) {
-	if t.conn != nil {
-		if t.writeTimeout != 0 {
-			// Set a write deadline before we call write.
-			t.conn.SetWriteDeadline(time.Now().Add(t.writeTimeout))
-		}
-		n, err = t.conn.Write(b)
-		if t.writeTimeout != 0 {
-			// Clear the deadline if we have one set
-			t.conn.SetWriteDeadline(time.Time{})
-		}
-	}
-	return 0, fmt.Errorf("Connection is nil")
-}
-
-func (t *timeoutConn) Close() (err error) {
-	if t.conn != nil {
-		err = t.conn.Close()
-		if err != nil {
-			// If the close looked successful, set the connection to nil
-			t.conn = nil
-		}
-		return
-	}
-	return fmt.Errorf("Connection is nil")
-}
-
-func (t *timeoutConn) LocalAddr() net.Addr {
-	if t.conn != nil {
-		return t.conn.LocalAddr()
-	}
-	return nil
-}
-
-func (t *timeoutConn) RemoteAddr() net.Addr {
-	if t.conn != nil {
-		return t.conn.RemoteAddr()
-	}
-	return nil
-}
-
-func (t *timeoutConn) SetDeadline(time time.Time) error {
-	if t.conn != nil {
-		return t.conn.SetDeadline(time)
-	}
-	return fmt.Errorf("Connection is nil")
-}
-
-func (t *timeoutConn) SetReadDeadline(time time.Time) error {
-	if t.conn != nil {
-		return t.conn.SetReadDeadline(time)
-	}
-	return fmt.Errorf("Connection is nil")
-}
-
-func (t *timeoutConn) SetWriteDeadline(time time.Time) error {
-	if t.conn != nil {
-		return t.conn.SetWriteDeadline(time)
-	}
-	return fmt.Errorf("Connection is nil")
 }
