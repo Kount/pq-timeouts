@@ -47,7 +47,7 @@ func (t *timeoutConn) Write(b []byte) (n int, err error) {
 func (t *timeoutConn) Close() (err error) {
 	if t.conn != nil {
 		err = t.conn.Close()
-		if err != nil {
+		if err == nil {
 			// If the close looked successful, set the connection to nil
 			t.conn = nil
 		}
