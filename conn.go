@@ -6,6 +6,13 @@ import (
 	"time"
 )
 
+type nilConnErr struct {
+}
+
+func (e nilConnErr) Error() string {
+	return "Connection is nil"
+}
+
 type timeoutConn struct {
 	conn         net.Conn
 	readTimeout  time.Duration
@@ -25,7 +32,7 @@ func (t *timeoutConn) Read(b []byte) (n int, err error) {
 		}
 		return
 	}
-	return 0, fmt.Errorf("Connection is nil")
+	return 0, nilConnErr{}
 }
 
 func (t *timeoutConn) Write(b []byte) (n int, err error) {
@@ -41,7 +48,7 @@ func (t *timeoutConn) Write(b []byte) (n int, err error) {
 		}
 		return
 	}
-	return 0, fmt.Errorf("Connection is nil")
+	return 0, nilConnErr{}
 }
 
 func (t *timeoutConn) Close() (err error) {
@@ -53,7 +60,7 @@ func (t *timeoutConn) Close() (err error) {
 		}
 		return
 	}
-	return fmt.Errorf("Connection is nil")
+	return nilConnErr{}
 }
 
 func (t *timeoutConn) LocalAddr() net.Addr {
@@ -74,14 +81,14 @@ func (t *timeoutConn) SetDeadline(time time.Time) error {
 	if t.conn != nil {
 		return t.conn.SetDeadline(time)
 	}
-	return fmt.Errorf("Connection is nil")
+	return nilConnErr{}
 }
 
 func (t *timeoutConn) SetReadDeadline(time time.Time) error {
 	if t.conn != nil {
 		return t.conn.SetReadDeadline(time)
 	}
-	return fmt.Errorf("Connection is nil")
+	return nilConnErr{}
 }
 
 func (t *timeoutConn) SetWriteDeadline(time time.Time) error {
