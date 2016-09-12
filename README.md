@@ -1,6 +1,8 @@
 # pq-timeouts
 A Postgres driver for Go that wraps lib/pq to provide read and write timeouts.
 
+![build status](https://api.travis-ci.org/Kount/pq-timeouts.svg)
+
 ## Why?
 
 [lib/pq](https://github.com/lib/pq) is an excellent Postgres driver written in pure Go, but it only offers support for the default
