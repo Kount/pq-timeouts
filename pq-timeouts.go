@@ -29,7 +29,8 @@ Connections using a URL work as well:
 	db,err := sql.Open("pq-timeouts", "postgres://pqtest:password@localhost/pqtest?read_timeout=500&write_timeout=1000")
 
 
-read_timeout and write_timeout are specified in milliseconds. For other connection options, check out the documentation for lib/pq:
+read_timeout and write_timeout are specified in milliseconds. If read_timeout or write_timeout are not specified or set to 0,
+no timeout is set and the driver behaves as standard lib/pq. For other connection options, check out the documentation for lib/pq:
 https://godoc.org/github.com/lib/pq
 */
 package pqtimeouts
