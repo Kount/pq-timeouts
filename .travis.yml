@@ -1,0 +1,11 @@
+language: go
+
+go:
+  - tip
+
+install:
+  - go get github.com/lib/pq
+
+script:
+  - go build ./...
+  - go test -v ./...
