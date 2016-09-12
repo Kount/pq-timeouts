@@ -27,6 +27,14 @@ func (t timeoutDriver) Open(connection string) (_ driver.Conn, err error) {
 	var readTimeout time.Duration
 	var writeTimeout time.Duration
 
+	// If the connection is specified as a URL, use the parsing function in lib/pq to turn it into options.
+	if strings.HasPrefix(connection, "postgres://") || strings.HasPrefix(connection, "postgresql://") {
+		connection, err = pq.ParseURL(connection)
+		if err != nil {
+			return nil, err
+		}
+	}
+
 	for _, setting := range strings.Fields(connection) {
 		s := strings.Split(setting, "=")
 		if s[0] == "read_timeout" {

@@ -148,3 +148,64 @@ func TestOpenTimeoutsAddedReadError(t *testing.T) {
 		t.Errorf("Thr error is unexpected: %q", err.Error())
 	}
 }
+
+func TestPostgresURL(t *testing.T) {
+	var connection string
+	var dialer pq.Dialer
+
+	testDialOpen := func(d pq.Dialer, name string) (_ driver.Conn, err error) {
+		connection = name
+		dialer = d
+		return nil, nil
+	}
+
+	driver := timeoutDriver{dialOpen: testDialOpen}
+
+	_, err := driver.Open("postgres://pqtest:password@localhost/pqtest?read_timeout=500&sslmode=verify-full&write_timeout=100")
+
+	if err != nil {
+		t.Error("Unexpected error")
+	}
+
+	if connection != "dbname=pqtest host=localhost password=password sslmode=verify-full user=pqtest" {
+		t.Errorf("The connection string was not as expected: %q", connection)
+	}
+
+	if toDialer, ok := dialer.(timeoutDialer); ok {
+		if toDialer.readTimeout != time.Duration(500)*time.Millisecond {
+			t.Error("Read timeout was not set to the correct duration")
+		}
+
+		if toDialer.writeTimeout != time.Duration(100)*time.Millisecond {
+			t.Error("Write timeout was not set to the correct duration")
+		}
+
+	} else {
+		t.Error("The dialer is not a timeoutDialer")
+	}
+}
+
+func TestPostgresqlURLError(t *testing.T) {
+	dialOpenCalled := false
+
+	testDialOpen := func(d pq.Dialer, name string) (_ driver.Conn, err error) {
+		dialOpenCalled = true
+		return nil, nil
+	}
+
+	driver := timeoutDriver{dialOpen: testDialOpen}
+
+	_, err := driver.Open("postgresql://pqtest\\\\/:password@localhost/pqtest?read_timeout=500&sslmode=verify-full&write_timeout=100")
+
+	if err == nil {
+		t.Error("An error was expected")
+	}
+
+	if err.Error() != "parse postgresql://pqtest\\\\/:password@localhost/pqtest?read_timeout=500&sslmode=verify-full&write_timeout=100: invalid character \"\\\\\" in host name" {
+		t.Errorf("The error was not as expected: %q", err.Error())
+	}
+
+	if dialOpenCalled {
+		t.Error("DialOpen should not have been called")
+	}
+}
