@@ -1,7 +1,7 @@
 # pq-timeouts
 A Postgres driver for Go that wraps lib/pq to provide read and write timeouts.
 
-![build status](https://api.travis-ci.org/Kount/pq-timeouts.svg)
+[![build status](https://api.travis-ci.org/Kount/pq-timeouts.svg)](https://travis-ci.org/Kount/pq-timeouts)
 
 ## Why?
 
