@@ -1,11 +1,15 @@
 language: go
-
+sudo: false
 go:
   - tip
+
+before_install:
+  - go get github.com/mattn/goveralls
+  - go get golang.org/x/tools/cmd/cover
 
 install:
   - go get github.com/lib/pq
 
 script:
   - go build ./...
-  - go test -v ./...
+  - $HOME/gopath/bin/goveralls -service=travis-ci
