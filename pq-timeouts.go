@@ -20,7 +20,6 @@ the same as lib/pq through the database/sql package:
 
 		age := 21
 		rows, err := db.Query("SELECT name FROM users WHERE age = $1", age)
-		&
 	}
 
 
