@@ -124,7 +124,11 @@ func TestOpenTimeoutsAddedWriteError(t *testing.T) {
 	}
 
 	if err.Error() != "Error interpreting value for write_timeout" {
-		t.Errorf("Thr error is unexpected: %q", err.Error())
+		t.Errorf("The error is unexpected: %q", err.Error())
+	}
+
+	if dialOpenCalled != false {
+		t.Error("DialOpen should not have been called and was")
 	}
 }
 
@@ -145,7 +149,11 @@ func TestOpenTimeoutsAddedReadError(t *testing.T) {
 	}
 
 	if err.Error() != "Error interpreting value for read_timeout" {
-		t.Errorf("Thr error is unexpected: %q", err.Error())
+		t.Errorf("The error is unexpected: %q", err.Error())
+	}
+
+	if dialOpenCalled != false {
+		t.Error("DialOpen should not have been called and was")
 	}
 }
 
