@@ -13,14 +13,16 @@ import (
 )
 
 func init() {
-	sql.Register("pq-timeouts", timeoutDriver{dialOpen: pq.DialOpen})
+	sql.Register("pq-timeouts", &TimeoutDriver{dialOpen: pq.DialOpen})
 }
 
-type timeoutDriver struct {
+// TimeoutDriver is the Postgres database driver, providing read and write timeouts.
+type TimeoutDriver struct {
 	dialOpen func(pq.Dialer, string) (driver.Conn, error) // Allow this to be stubbed for testing
 }
 
-func (t timeoutDriver) Open(connection string) (_ driver.Conn, err error) {
+// Open creates a new connection to the database by using the given connection string.
+func (t TimeoutDriver) Open(connection string) (_ driver.Conn, err error) {
 	// Look for read_timeout and write_timeout in the connection string and extract the values.
 	// read_timeout and write_timeout need to be removed from the connection string before calling pq as well.
 	var newConnectionSettings []string
