@@ -19,7 +19,7 @@ func TestOpenNoTimeoutsAdded(t *testing.T) {
 		return nil, nil
 	}
 
-	driver := timeoutDriver{dialOpen: testDialOpen}
+	driver := TimeoutDriver{DialOpen: testDialOpen}
 
 	testConnection := "user=pqtest dbname=pqtest sslmode=verify-full"
 	_, err := driver.Open(testConnection)
@@ -47,7 +47,7 @@ func TestOpenReadTimeoutAdded(t *testing.T) {
 		return nil, nil
 	}
 
-	driver := timeoutDriver{dialOpen: testDialOpen}
+	driver := TimeoutDriver{DialOpen: testDialOpen}
 
 	_, err := driver.Open("user=pqtest read_timeout=700 dbname=pqtest sslmode=verify-full")
 
@@ -82,7 +82,7 @@ func TestOpenWriteTimeoutAdded(t *testing.T) {
 		return nil, nil
 	}
 
-	driver := timeoutDriver{dialOpen: testDialOpen}
+	driver := TimeoutDriver{DialOpen: testDialOpen}
 
 	_, err := driver.Open(" user=pqtest write_timeout=968      dbname=pqtest sslmode=verify-full		")
 
@@ -115,7 +115,7 @@ func TestOpenTimeoutsAddedWriteError(t *testing.T) {
 		return nil, nil
 	}
 
-	driver := timeoutDriver{dialOpen: testDialOpen}
+	driver := TimeoutDriver{DialOpen: testDialOpen}
 
 	_, err := driver.Open(" user=pqtest write_timeout=seven read_timeout=7    dbname=pqtest sslmode=verify-full		")
 
@@ -140,7 +140,7 @@ func TestOpenTimeoutsAddedReadError(t *testing.T) {
 		return nil, nil
 	}
 
-	driver := timeoutDriver{dialOpen: testDialOpen}
+	driver := TimeoutDriver{DialOpen: testDialOpen}
 
 	_, err := driver.Open(" user=pqtest    write_timeout=680 read_timeout=    dbname=pqtest sslmode=verify-full		")
 
@@ -167,7 +167,7 @@ func TestPostgresURL(t *testing.T) {
 		return nil, nil
 	}
 
-	driver := timeoutDriver{dialOpen: testDialOpen}
+	driver := TimeoutDriver{DialOpen: testDialOpen}
 
 	_, err := driver.Open("postgres://pqtest:password@localhost/pqtest?read_timeout=500&sslmode=verify-full&write_timeout=100")
 
@@ -201,7 +201,7 @@ func TestPostgresqlURLError(t *testing.T) {
 		return nil, nil
 	}
 
-	driver := timeoutDriver{dialOpen: testDialOpen}
+	driver := TimeoutDriver{DialOpen: testDialOpen}
 
 	_, err := driver.Open("postgresql://pqtest\\\\/:password@localhost/pqtest?read_timeout=500&sslmode=verify-full&write_timeout=100")
 
