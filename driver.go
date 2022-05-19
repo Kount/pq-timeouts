@@ -38,15 +38,17 @@ func (t timeoutDriver) Open(connection string) (_ driver.Conn, err error) {
 	for _, setting := range strings.Fields(connection) {
 		s := strings.Split(setting, "=")
 		if s[0] == "read_timeout" {
-			val, err := strconv.Atoi(s[1])
+			trimmed := strings.Trim(s[1], "'\"")
+			val, err := strconv.Atoi(trimmed)
 			if err != nil {
-				return nil, fmt.Errorf("Error interpreting value for read_timeout")
+				return nil, fmt.Errorf("Error interpreting value %#v for read_timeout", trimmed)
 			}
 			readTimeout = time.Duration(val) * time.Millisecond // timeout is in milliseconds
 		} else if s[0] == "write_timeout" {
-			val, err := strconv.Atoi(s[1])
+			trimmed := strings.Trim(s[1], "'\"")
+			val, err := strconv.Atoi(trimmed)
 			if err != nil {
-				return nil, fmt.Errorf("Error interpreting value for write_timeout")
+				return nil, fmt.Errorf("Error interpreting value %#v for write_timeout", trimmed)
 			}
 			writeTimeout = time.Duration(val) * time.Millisecond // timeout is in milliseconds
 		} else {
